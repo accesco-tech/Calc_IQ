@@ -6,7 +6,7 @@ services:
     # Added uvicorn to ensure FastAPI can run
     buildCommand: pip install -r requirements.txt && pip install gunicorn joblib uvicorn
     # Added the --worker-class to handle FastAPI's async nature
-    startCommand: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt && pip install gunicorn joblib scikit-learn
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
