@@ -219,12 +219,12 @@ td:last-child { text-align: right; font-weight: 700; color: var(--primary); font
 <script>
 let chart;
 
-// Helper to format currency in Indian Rupees
+// Format currency for India
 function inr(v) { 
     return "₹" + Math.round(v).toLocaleString("en-IN"); 
 }
 
-// Separate function for chart logic to keep generate() clean
+// Chart.js update logic
 function updateChart(needs, wants, savings) {
     const ctx = document.getElementById('chart').getContext('2d');
     if (chart) chart.destroy();
@@ -252,7 +252,7 @@ function updateChart(needs, wants, savings) {
 }
 
 async function generate() {
-    // 1. Gather payload with correct data types for FastAPI
+    // 1. Collect and validate data types
     const payload = {
         income: parseFloat(document.getElementById('income').value),
         rent: parseFloat(document.getElementById('rent').value),
@@ -261,48 +261,46 @@ async function generate() {
     };
 
     try {
-        // 2. Execute the prediction request
+        // 2. Send request to FastAPI
         const res = await fetch("/predict", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
 
-        // 3. Handle validation errors (e.g. Family > 10)
+        // 3. Catch validation errors (e.g., family > 10)
         if (!res.ok) {
             const err = await res.json();
-            console.error("Server Error:", err);
-            alert("Prediction Error: Please check your inputs. Ensure City Index is 0.7-1.6 and Family is 1-10.");
+            alert("Error: Please check your inputs. (Family: 1-10, Index: 0.7-1.6)");
             return;
         }
 
         const d = await res.json();
         
-        // 4. Transform data for UI display logic
-        // Note: d contains: grocery_and_essentials, education, healthcare, transport, travel, savings, entertainment
+        // 4. Group results for UI categories
         const needsVal = payload.rent + d.grocery_and_essentials + d.education + d.healthcare;
         const wantsVal = d.transport + d.travel + d.entertainment;
         const savingsVal = d.savings;
 
-        // 5. Update UI components
+        // 5. Update summary boxes
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
         document.getElementById('savings').textContent = inr(savingsVal);
 
-        // 6. Populate breakdown table
+        // 6. Build the breakdown table
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
             table.innerHTML += `<tr><td>${k.replace(/_/g, " ")}</td><td>${inr(v)}</td></tr>`;
         });
 
-        // 7. Update visualization and reveal results
+        // 7. Render visualization and show result
         updateChart(needsVal, wantsVal, savingsVal);
         document.getElementById("result").classList.remove("hidden");
 
     } catch (e) { 
-        console.error("Network or Script Error:", e);
-        alert("Could not connect to the AI service. Please check your internet connection.");
+        console.error("Connection error:", e);
+        alert("Could not connect to the AI model. Please check the server logs.");
     }
 }
 </script>
