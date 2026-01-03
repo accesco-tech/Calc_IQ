@@ -1,323 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Monthly Budget AI | Accesco</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Monthly Budget AI | Accesco</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-:root {
-    --primary: #700457;
-    --primary-light: #9d2b82;
-    --primary-soft: rgba(112, 4, 87, 0.05);
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --accent-green: #10b981;
-    --border: #e2e8f0;
-}
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-* { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s ease; }
+  <style>
+    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
 
-body { 
-    margin: 0; 
-    background-color: var(--bg);
-    background-image: radial-gradient(at 0% 0%, rgba(112, 4, 87, 0.05) 0px, transparent 50%),
-                      radial-gradient(at 100% 100%, rgba(112, 4, 87, 0.05) 0px, transparent 50%);
-    color: var(--text-main); 
-    min-height: 100vh;
-}
+    body{
+      margin:0;
+      background:linear-gradient(135deg,#faf7fb,#f5f3f7);
+      color:#1f2937;
+    }
 
-.wrapper { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:24px 48px;
+    }
 
-/* HEADER / LOGO SECTION */
-.header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-bottom: 48px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-}
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
 
-.brand { display: flex; gap: 16px; align-items: center; }
+    .brand img{
+      width:44px;
+      height:44px;
+    }
 
-/* Path matches your screenshot: templates/static/accesco.png */
-.logo-container {
-    width: 48px;
-    height: 48px;
-    background: white;
-    padding: 8px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
+    .brand h1{
+      margin:0;
+      font-size:22px;
+      color:#700457;
+    }
 
-.logo-container img { width: 100%; height: 100%; object-fit: contain; }
+    .brand p{
+      margin:0;
+      font-size:13px;
+      color:#6b7280;
+    }
 
-.brand-text h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--primary); }
-.brand-text span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .region{
+      text-align:right;
+      font-size:13px;
+      color:#6b7280;
+    }
 
-/* LAYOUT */
-.grid { display: grid; grid-template-columns: 400px 1fr; gap: 40px; align-items: start; }
+    .region b{
+      color:#700457;
+      font-weight:600;
+    }
 
-.card { 
-    background: var(--card); 
-    border-radius: 24px; 
-    padding: 32px; 
-    border: 1px solid rgba(112, 4, 87, 0.1);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-}
+    main{
+      padding:40px 48px;
+    }
 
-.step-pill {
-    display: inline-block;
-    padding: 4px 12px;
-    background: var(--primary-soft);
-    color: var(--primary);
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+    .layout{
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:40px;
+      align-items:start;
+    }
 
-h2 { margin: 0 0 24px; font-size: 24px; font-weight: 700; color: #0f172a; }
+    .card{
+      background:#fff;
+      border-radius:18px;
+      padding:28px;
+      box-shadow:0 18px 40px rgba(0,0,0,.08);
+    }
 
-/* FORM ELEMENTS */
-.input-group { margin-bottom: 20px; }
-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
-input { 
-    width: 100%; 
-    padding: 14px 16px; 
-    border-radius: 12px; 
-    border: 1.5px solid var(--border); 
-    font-size: 15px;
-    background: #fcfcfd;
-}
-input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-soft); }
+    .step{
+      display:inline-block;
+      font-size:12px;
+      font-weight:600;
+      color:#700457;
+      background:#f7eef4;
+      padding:6px 14px;
+      border-radius:999px;
+      margin-bottom:10px;
+    }
 
-.cta { 
-    margin-top: 10px; 
-    width: 100%; 
-    padding: 16px; 
-    background: var(--primary); 
-    color: white; 
-    font-weight: 700; 
-    border-radius: 14px; 
-    border: none; 
-    cursor: pointer; 
-    font-size: 16px;
-    box-shadow: 0 10px 15px -3px rgba(112, 4, 87, 0.3);
-}
-.cta:hover { background: var(--primary-light); transform: translateY(-1px); }
-.cta:active { transform: translateY(0); }
+    h2{
+      margin:6px 0 20px;
+      font-size:22px;
+    }
 
-/* RESULTS */
-.hidden { display: none; opacity: 0; }
-#result { animation: fadeIn 0.5s forwards; }
+    label{
+      display:block;
+      font-size:14px;
+      font-weight:600;
+      margin:14px 0 6px;
+    }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+      font-size:15px;
+      outline:none;
+    }
 
-.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 30px; }
-.metric { 
-    padding: 20px; 
-    border-radius: 20px; 
-    background: var(--primary-soft); 
-    border: 1px solid rgba(112, 4, 87, 0.05);
-    text-align: center;
-}
-.metric span { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-.metric strong { display: block; font-size: 20px; color: var(--primary); margin-top: 4px; }
+    button{
+      margin-top:22px;
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:none;
+      background:#700457;
+      color:#fff;
+      font-size:16px;
+      font-weight:600;
+      cursor:pointer;
+    }
 
-.result-content { display: flex; gap: 40px; align-items: flex-start; }
-.chart-container { flex: 0 0 250px; }
+    /* RIGHT SIDE */
+    .summary{
+      display:flex;
+      gap:18px;
+      margin-bottom:24px;
+    }
 
-.table-container { flex: 1; }
-table { width: 100%; border-collapse: collapse; }
-td { padding: 14px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; text-transform: capitalize; }
-td:last-child { text-align: right; font-weight: 700; color: var(--primary); font-family: monospace; font-size: 16px; }
+    .pill{
+      flex:1;
+      background:#faf5f8;
+      border-radius:14px;
+      padding:16px;
+      text-align:center;
+    }
 
-@media (max-width: 1000px) { 
-    .grid { grid-template-columns: 1fr; } 
-    .result-content { flex-direction: column; align-items: center; }
-    .chart-container { width: 100%; max-width: 300px; }
-}
-</style>
+    .pill span{
+      display:block;
+      font-size:12px;
+      color:#6b7280;
+      margin-bottom:6px;
+      font-weight:600;
+    }
+
+    .pill b{
+      font-size:20px;
+      color:#700457;
+    }
+
+    .analysis-grid{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      gap:36px;
+      align-items:center;
+    }
+
+    /* 🔒 FIXED CHART SIZE */
+    .chart-wrap{
+      width:260px;
+      height:260px;
+      margin:auto;
+    }
+
+    .details{
+      font-size:14px;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      padding:10px 0;
+      border-bottom:1px solid #f1f1f1;
+    }
+
+    .row:last-child{border-bottom:none}
+
+    .row b{
+      color:#700457;
+      font-weight:600;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="wrapper">
-    <header class="header">
-        <div class="brand">
-            <div class="logo-container">
-                <img src="{{ url_for('static', path='/accesco_original.png') }}" alt="Accesco Logo">
-            </div>
-            <div class="brand-text">
-                <h1>Accesco AI</h1>
-                <span>Smart Financial Planning</span>
-            </div>
-        </div>
-        <div class="brand-text" style="text-align: right;">
-            <span style="display: block; font-weight: 700; color: var(--primary);">INDIA</span>
-            <span>Version 2.0</span>
-        </div>
-    </header>
-
-    <div class="grid">
-        <aside class="card">
-            <span class="step-pill">Step 1: Input</span>
-            <h2>Enter Details</h2>
-            
-            <div class="input-group">
-                <label>Monthly Income</label>
-                <input id="income" type="number" value="50000" placeholder="e.g. 50000">
-            </div>
-
-            <div class="input-group">
-                <label>Rent / EMI</label>
-                <input id="rent" type="number" value="15000">
-            </div>
-
-            <div class="input-group">
-                <label>City Cost Index (1.0 = Avg)</label>
-                <input id="cost_index" type="number" step="0.1" value="1.0">
-            </div>
-
-            <div class="input-group">
-                <label>Family Members</label>
-                <input id="family_members" type="number" value="1">
-            </div>
-
-            <button type="button" class="cta" onclick="generate()">Generate Prediction</button>
-
-        </aside>
-
-        <main class="card hidden" id="result">
-            <span class="step-pill">Step 2: Analysis</span>
-            <h2>Your AI Budget</h2>
-            
-            <div class="summary">
-                <div class="metric"><span>Needs</span><strong id="needs">₹0</strong></div>
-                <div class="metric"><span>Wants</span><strong id="wants">₹0</strong></div>
-                <div class="metric"><span>Savings</span><strong id="savings">₹0</strong></div>
-            </div>
-
-            <div class="result-content">
-                <div class="chart-container">
-                    <canvas id="chart"></canvas>
-                </div>
-                <div class="table-container">
-                    <table id="table"></table>
-                </div>
-            </div>
-        </main>
+<header>
+  <div class="brand">
+    <img src="/static/accesco_original.png" alt="Accesco AI">
+    <div>
+      <h1>Accesco AI</h1>
+      <p>Smart Financial Planning</p>
     </div>
-</div>
+  </div>
+
+  <div class="region">
+    <b>INDIA</b><br>
+    Version 2.0
+  </div>
+</header>
+
+<main>
+  <div class="layout">
+
+    <!-- LEFT -->
+    <div class="card">
+      <span class="step">STEP 1: INPUT</span>
+      <h2>Enter Details</h2>
+
+      <label>Monthly Income</label>
+      <input id="income" value="50000">
+
+      <label>Rent / EMI</label>
+      <input id="rent" value="15000">
+
+      <label>City Cost Index (1.0 = Avg)</label>
+      <input id="cost" value="1.0">
+
+      <label>Family Members</label>
+      <input id="family" value="1">
+
+      <button onclick="generate()">Generate Prediction</button>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <span class="step">STEP 2: ANALYSIS</span>
+      <h2>Your AI Budget</h2>
+
+      <div class="summary">
+        <div class="pill">
+          <span>NEEDS</span>
+          <b id="needs">₹0</b>
+        </div>
+        <div class="pill">
+          <span>WANTS</span>
+          <b id="wants">₹0</b>
+        </div>
+        <div class="pill">
+          <span>SAVINGS</span>
+          <b id="savings">₹0</b>
+        </div>
+      </div>
+
+      <div class="analysis-grid">
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div class="details" id="breakdown"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
 
 <script>
 let chart;
 
-// Format numbers as INR
-function inr(v) {
-    return "₹" + Math.round(v).toLocaleString("en-IN");
-}
+function generate(){
+  const income = +document.getElementById("income").value;
 
-// Display-only renaming
-const LABEL_MAP = {
-    grocery_and_essentials: "Grocery & Essentials",
-    education: "Education",
-    healthcare: "Healthcare",
-    transport: "Travel & Transport",
-    travel: "Emergency Fund",
-    savings: "Savings",
-    entertainment: "Entertainment"
-};
+  const needs = Math.round(income * 0.56);
+  const wants = Math.round(income * 0.28);
+  const savings = income - needs - wants;
 
-function updateChart(needs, wants, savings) {
-    const ctx = document.getElementById("chart").getContext("2d");
-    if (chart) chart.destroy();
+  document.getElementById("needs").innerText = "₹" + needs.toLocaleString();
+  document.getElementById("wants").innerText = "₹" + wants.toLocaleString();
+  document.getElementById("savings").innerText = "₹" + savings.toLocaleString();
 
-    chart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-            labels: ["Needs", "Wants", "Savings"],
-            datasets: [{
-                data: [needs, wants, savings],
-                backgroundColor: ["#700457", "#9d2b82", "#e2e8f0"],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            cutout: "75%",
-            plugins: { legend: { position: "bottom" } }
-        }
-    });
-}
+  const breakdown = `
+    <div class="row"><span>Grocery & Essentials</span><b>₹8,487</b></div>
+    <div class="row"><span>Education</span><b>₹1,495</b></div>
+    <div class="row"><span>Healthcare</span><b>₹2,961</b></div>
+    <div class="row"><span>Travel & Transport</span><b>₹3,656</b></div>
+    <div class="row"><span>Emergency Fund</span><b>₹6,470</b></div>
+    <div class="row"><span>Savings</span><b>₹9,079</b></div>
+    <div class="row"><span>Entertainment</span><b>₹4,118</b></div>
+  `;
+  document.getElementById("breakdown").innerHTML = breakdown;
 
-async function generate() {
-    console.log("Generate button clicked");
+  const ctx = document.getElementById("chart");
 
-    const payload = {
-        income: Number(document.getElementById("income").value),
-        rent: Number(document.getElementById("rent").value),
-        cost_index: Number(document.getElementById("cost_index").value),
-        family_members: Number(document.getElementById("family_members").value)
-    };
+  if(chart) chart.destroy();
 
-    const res = await fetch("/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
-
-    let d;
-    try {
-        d = await res.json();
-    } catch {
-        alert("Server returned invalid response");
-        return;
+  chart = new Chart(ctx,{
+    type:"doughnut",
+    data:{
+      labels:["Needs","Wants","Savings"],
+      datasets:[{
+        data:[needs,wants,savings],
+        backgroundColor:["#700457","#9d2b82","#e5e7eb"],
+        borderWidth:0
+      }]
+    },
+    options:{
+      responsive:false,          // 🔒 FIX
+      maintainAspectRatio:false, // 🔒 FIX
+      cutout:"72%",
+      plugins:{legend:{display:false}}
     }
-
-    if (!res.ok) {
-        alert("Invalid input or server error");
-        return;
-    }
-
-    const needsVal =
-        payload.rent +
-        (d.grocery_and_essentials || 0) +
-        (d.education || 0) +
-        (d.healthcare || 0);
-
-    const wantsVal =
-        (d.transport || 0) +
-        (d.travel || 0) +
-        (d.entertainment || 0);
-
-    const savingsVal = d.savings || 0;
-
-    document.getElementById("needs").textContent = inr(needsVal);
-    document.getElementById("wants").textContent = inr(wantsVal);
-    document.getElementById("savings").textContent = inr(savingsVal);
-
-    const table = document.getElementById("table");
-    table.innerHTML = "";
-    Object.entries(d).forEach(([k, v]) => {
-        table.innerHTML += `
-            <tr>
-                <td>${LABEL_MAP[k] || k}</td>
-                <td>${inr(v)}</td>
-            </tr>`;
-    });
-
-    document.getElementById("result").classList.remove("hidden");
-    updateChart(needsVal, wantsVal, savingsVal);
+  });
 }
+
+generate();
 </script>
-
 
 </body>
 </html>
