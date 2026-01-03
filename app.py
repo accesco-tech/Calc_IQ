@@ -2,16 +2,17 @@ import os
 import numpy as np
 import tensorflow as tf
 import joblib
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # -------------------------------------------------
-# 1. SETUP PATHS
+# 1. PATH CONFIG
 # -------------------------------------------------
-# This ensures the app finds your files regardless of where it's hosted
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATH = os.path.join(BASE_DIR, "monthly_budget_model.keras")
@@ -21,25 +22,33 @@ OUTPUT_SCALER_PATH = os.path.join(BASE_DIR, "output_scaler.pkl")
 # -------------------------------------------------
 # 2. LOAD MODEL & SCALERS
 # -------------------------------------------------
-# Check if files exist to provide a better error message if they are missing
 for path in [MODEL_PATH, INPUT_SCALER_PATH, OUTPUT_SCALER_PATH]:
     if not os.path.exists(path):
-        raise FileNotFoundError(f"CRITICAL ERROR: The file {path} was not found in the repository.")
+        raise FileNotFoundError(f"Missing required file: {path}")
 
 model = tf.keras.models.load_model(MODEL_PATH)
 input_scaler = joblib.load(INPUT_SCALER_PATH)
 output_scaler = joblib.load(OUTPUT_SCALER_PATH)
 
 # -------------------------------------------------
-# 3. FASTAPI APP SETUP
+# 3. FASTAPI APP
 # -------------------------------------------------
 app = FastAPI(
     title="Monthly Budget AI",
     description="AI-powered monthly budget generator",
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# Static and Template configuration
+# ✅ REQUIRED FOR BROWSER FETCH (CRITICAL FIX)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Static + Templates
 app.mount("/static", StaticFiles(directory="templates/static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -68,9 +77,9 @@ class BudgetOutput(BaseModel):
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.post("/predict", response_model=BudgetOutput)
 def predict_budget(data: BudgetInput):
-    # Prepare input array
     input_array = np.array([[
         data.income,
         data.rent,
@@ -78,16 +87,10 @@ def predict_budget(data: BudgetInput):
         data.family_members
     ]])
 
-    # Scale input
     scaled_input = input_scaler.transform(input_array)
-
-    # Predict
     scaled_output = model.predict(scaled_input, verbose=0)
-
-    # Inverse scale output
     output = output_scaler.inverse_transform(scaled_output)[0]
 
-    # Clamp negative values
     output = np.maximum(output, 0)
 
     return {
@@ -99,3 +102,9 @@ def predict_budget(data: BudgetInput):
         "savings": round(float(output[5]), 2),
         "entertainment": round(float(output[6]), 2),
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
