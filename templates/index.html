@@ -219,12 +219,12 @@ td:last-child { text-align: right; font-weight: 700; color: var(--primary); font
 <script>
 let chart;
 
-// Format numbers as Indian Rupees
+// Helper to format currency for India
 function inr(v) { 
     return "₹" + Math.round(v).toLocaleString("en-IN"); 
 }
 
-// Chart update logic
+// Logic to create/update the result chart
 function updateChart(needs, wants, savings) {
     const ctx = document.getElementById('chart').getContext('2d');
     if (chart) chart.destroy();
@@ -249,7 +249,7 @@ function updateChart(needs, wants, savings) {
 }
 
 async function generate() {
-    // 1. Collect inputs
+    // 1. Gather data with correct types
     const payload = {
         income: parseFloat(document.getElementById('income').value),
         rent: parseFloat(document.getElementById('rent').value),
@@ -258,44 +258,45 @@ async function generate() {
     };
 
     try {
-        // 2. Send data to FastAPI /predict
+        // 2. Send data to the FastAPI /predict route
         const res = await fetch("/predict", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
 
+        // 3. Catch validation errors
         if (!res.ok) {
-            alert("Error: Check inputs (Family 1-10, Index 0.7-1.6)");
+            alert("Error: Please check your inputs. (Family: 1-10, Index: 0.7-1.6)");
             return;
         }
 
         const d = await res.json();
         
-        // 3. Group the AI results for the summary boxes
-        const needsVal = payload.rent + d.grocery_and_essentials + d.education + d.healthcare;
-        const wantsVal = d.transport + d.travel + d.entertainment;
-        const savingsVal = d.savings;
+        // 4. Group AI results for the summary UI
+        const needsVal = payload.rent + (d.grocery_and_essentials || 0) + (d.education || 0) + (d.healthcare || 0);
+        const wantsVal = (d.transport || 0) + (d.travel || 0) + (d.entertainment || 0);
+        const savingsVal = d.savings || 0;
 
-        // 4. Update the UI text
+        // 5. Update UI text elements
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
         document.getElementById('savings').textContent = inr(savingsVal);
 
-        // 5. Build the breakdown table
+        // 6. Populate the breakdown table
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
             table.innerHTML += `<tr><td>${k.replace(/_/g, " ")}</td><td>${inr(v)}</td></tr>`;
         });
 
-        // 6. Show the result card and update chart
+        // 7. Show the results card and update chart
         document.getElementById("result").classList.remove("hidden");
         updateChart(needsVal, wantsVal, savingsVal);
 
     } catch (e) { 
-        console.error("Connection error:", e);
-        alert("Server connection failed.");
+        console.error("Connection Error:", e);
+        alert("Server connection failed. Check your network.");
     }
 }
 </script>
