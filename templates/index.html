@@ -219,12 +219,12 @@ td:last-child { text-align: right; font-weight: 700; color: var(--primary); font
 <script>
 let chart;
 
-// Format currency for India
+// Format numbers as Indian Rupees
 function inr(v) { 
     return "₹" + Math.round(v).toLocaleString("en-IN"); 
 }
 
-// Chart.js update logic
+// Chart update logic
 function updateChart(needs, wants, savings) {
     const ctx = document.getElementById('chart').getContext('2d');
     if (chart) chart.destroy();
@@ -242,17 +242,14 @@ function updateChart(needs, wants, savings) {
         options: { 
             cutout: "75%", 
             plugins: { 
-                legend: { 
-                    position: "bottom", 
-                    labels: { usePointStyle: true, padding: 20, font: { weight: '600' } } 
-                } 
+                legend: { position: "bottom", labels: { usePointStyle: true, padding: 20, font: { weight: '600' } } } 
             } 
         }
     });
 }
 
 async function generate() {
-    // 1. Collect and validate data types
+    // 1. Collect inputs
     const payload = {
         income: parseFloat(document.getElementById('income').value),
         rent: parseFloat(document.getElementById('rent').value),
@@ -261,46 +258,44 @@ async function generate() {
     };
 
     try {
-        // 2. Send request to FastAPI
+        // 2. Send data to FastAPI /predict
         const res = await fetch("/predict", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
 
-        // 3. Catch validation errors (e.g., family > 10)
         if (!res.ok) {
-            const err = await res.json();
-            alert("Error: Please check your inputs. (Family: 1-10, Index: 0.7-1.6)");
+            alert("Error: Check inputs (Family 1-10, Index 0.7-1.6)");
             return;
         }
 
         const d = await res.json();
         
-        // 4. Group results for UI categories
+        // 3. Group the AI results for the summary boxes
         const needsVal = payload.rent + d.grocery_and_essentials + d.education + d.healthcare;
         const wantsVal = d.transport + d.travel + d.entertainment;
         const savingsVal = d.savings;
 
-        // 5. Update summary boxes
+        // 4. Update the UI text
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
         document.getElementById('savings').textContent = inr(savingsVal);
 
-        // 6. Build the breakdown table
+        // 5. Build the breakdown table
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
             table.innerHTML += `<tr><td>${k.replace(/_/g, " ")}</td><td>${inr(v)}</td></tr>`;
         });
 
-        // 7. Render visualization and show result
-        updateChart(needsVal, wantsVal, savingsVal);
+        // 6. Show the result card and update chart
         document.getElementById("result").classList.remove("hidden");
+        updateChart(needsVal, wantsVal, savingsVal);
 
     } catch (e) { 
         console.error("Connection error:", e);
-        alert("Could not connect to the AI model. Please check the server logs.");
+        alert("Server connection failed.");
     }
 }
 </script>
