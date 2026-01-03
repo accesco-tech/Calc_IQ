@@ -5,3 +5,7 @@ tensorflow-cpu
 pillow
 numpy
 jinja2
+tensorflow
+keras
+flask
+gunicorn==22.0.0
