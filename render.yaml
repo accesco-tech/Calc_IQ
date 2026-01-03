@@ -2,9 +2,11 @@ services:
   - type: web
     name: calc-iq-keras-api
     runtime: python
-    plan: free # or 'starter' if your model exceeds 512MB RAM
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app # Assumes your Flask/FastAPI instance is named 'app'
+    plan: free
+    # Added 'pip install gunicorn' directly to ensure it is available
+    buildCommand: pip install -r requirements.txt && pip install gunicorn
+    # Points directly to the gunicorn executable in the python environment
+    startCommand: python -m gunicorn main:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
