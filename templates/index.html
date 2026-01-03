@@ -224,7 +224,7 @@ function inr(v) {
     return "₹" + Math.round(v).toLocaleString("en-IN"); 
 }
 
-// Chart update logic
+// Chart.js update logic
 function updateChart(needs, wants, savings) {
     const ctx = document.getElementById('chart').getContext('2d');
     if (chart) chart.destroy();
@@ -258,45 +258,45 @@ async function generate() {
     };
 
     try {
-        // 2. Send request to Render FastAPI /predict
+        // 2. Send request to Render FastAPI /predict route
         const res = await fetch("/predict", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
 
-        // 3. IMPORTANT: If validation fails, tell the user why
+        // 3. Catch validation errors (Family 1-10, Index 0.7-1.6)
         if (!res.ok) {
-            const err = await res.json();
-            alert("Input Range Error! Please ensure:\n- Family Members: 1 to 10\n- City Index: 0.7 to 1.6");
+            alert("Input Error! Please ensure:\n- Family Members: 1 to 10\n- City Index: 0.7 to 1.6");
             return;
         }
 
         const d = await res.json();
         
-        // 4. Calculate Grouped Totals
+        // 4. Calculate Grouped Totals for UI categories
         const needsVal = payload.rent + (d.grocery_and_essentials || 0) + (d.education || 0) + (d.healthcare || 0);
         const wantsVal = (d.transport || 0) + (d.travel || 0) + (d.entertainment || 0);
         const savingsVal = d.savings || 0;
 
-        // 5. Update UI
+        // 5. Update UI text boxes
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
         document.getElementById('savings').textContent = inr(savingsVal);
 
+        // 6. Populate breakdown table
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
             table.innerHTML += `<tr><td>${k.replace(/_/g, " ")}</td><td>${inr(v)}</td></tr>`;
         });
 
-        // 6. SHOW THE HIDDEN RESULTS
+        // 7. IMPORTANT: REVEAL THE HIDDEN RESULTS CARD
         document.getElementById("result").classList.remove("hidden");
         updateChart(needsVal, wantsVal, savingsVal);
 
     } catch (e) { 
         console.error("Connection error:", e);
-        alert("Server communication failed.");
+        alert("Server communication failed. Please check your internet.");
     }
 }
 </script>
