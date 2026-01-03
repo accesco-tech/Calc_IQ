@@ -266,12 +266,21 @@ async function generate() {
         });
 
         // 3. Catch validation errors (Family 1-10, Index 0.7-1.6)
+        let d;
+
+        try {
+            d = await res.json();
+        } catch (err) {
+            console.error("Invalid JSON from server");
+            alert("Server error. Please try again.");
+            return;
+        }
+
         if (!res.ok) {
             alert("Input Error! Please ensure:\n- Family Members: 1 to 10\n- City Index: 0.7 to 1.6");
             return;
         }
 
-        const d = await res.json();
         
         // 4. Calculate Grouped Totals for UI categories
         const needsVal = payload.rent + (d.grocery_and_essentials || 0) + (d.education || 0) + (d.healthcare || 0);
