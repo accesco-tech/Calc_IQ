@@ -10,3 +10,5 @@ keras
 flask
 gunicorn==22.0.0
 joblib
+uvicorn
+tensorflow
