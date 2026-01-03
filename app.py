@@ -1,25 +1,37 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles  # Added for image loading
-from pydantic import BaseModel, Field
+import os
 import numpy as np
 import tensorflow as tf
 import joblib
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 # -------------------------------------------------
-# LOAD MODEL & SCALERS
+# 1. SETUP PATHS
 # -------------------------------------------------
-MODEL_PATH = "monthly_budget_model.keras"
-INPUT_SCALER_PATH = "input_scaler.pkl"
-OUTPUT_SCALER_PATH = "output_scaler.pkl"
+# This ensures the app finds your files regardless of where it's hosted
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+MODEL_PATH = os.path.join(BASE_DIR, "monthly_budget_model.keras")
+INPUT_SCALER_PATH = os.path.join(BASE_DIR, "input_scaler.pkl")
+OUTPUT_SCALER_PATH = os.path.join(BASE_DIR, "output_scaler.pkl")
+
+# -------------------------------------------------
+# 2. LOAD MODEL & SCALERS
+# -------------------------------------------------
+# Check if files exist to provide a better error message if they are missing
+for path in [MODEL_PATH, INPUT_SCALER_PATH, OUTPUT_SCALER_PATH]:
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"CRITICAL ERROR: The file {path} was not found in the repository.")
 
 model = tf.keras.models.load_model(MODEL_PATH)
 input_scaler = joblib.load(INPUT_SCALER_PATH)
 output_scaler = joblib.load(OUTPUT_SCALER_PATH)
 
 # -------------------------------------------------
-# FASTAPI APP
+# 3. FASTAPI APP SETUP
 # -------------------------------------------------
 app = FastAPI(
     title="Monthly Budget AI",
@@ -27,29 +39,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# -------------------------------------------------
-# STATIC FILES CONFIG (Added for image loading)
-# -------------------------------------------------
-# This links your 'templates/static' folder to the '/static' URL path
+# Static and Template configuration
 app.mount("/static", StaticFiles(directory="templates/static"), name="static")
-
-# -------------------------------------------------
-# TEMPLATE CONFIG
-# -------------------------------------------------
 templates = Jinja2Templates(directory="templates")
 
 # -------------------------------------------------
-# INPUT SCHEMA
+# 4. SCHEMAS
 # -------------------------------------------------
 class BudgetInput(BaseModel):
-    income: float = Field(..., gt=0, description="Monthly income")
-    rent: float = Field(..., ge=0, description="Monthly rent")
-    cost_index: float = Field(..., ge=0.7, le=1.6, description="City cost index")
-    family_members: int = Field(..., ge=1, le=10, description="Number of family members")
+    income: float = Field(..., gt=0)
+    rent: float = Field(..., ge=0)
+    cost_index: float = Field(..., ge=0.7, le=1.6)
+    family_members: int = Field(..., ge=1, le=10)
 
-# -------------------------------------------------
-# OUTPUT SCHEMA
-# -------------------------------------------------
 class BudgetOutput(BaseModel):
     grocery_and_essentials: float
     education: float
@@ -60,18 +62,14 @@ class BudgetOutput(BaseModel):
     entertainment: float
 
 # -------------------------------------------------
-# INDEX PAGE
+# 5. ROUTES
 # -------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-# -------------------------------------------------
-# PREDICTION ENDPOINT
-# -------------------------------------------------
 @app.post("/predict", response_model=BudgetOutput)
 def predict_budget(data: BudgetInput):
-
     # Prepare input array
     input_array = np.array([[
         data.income,
