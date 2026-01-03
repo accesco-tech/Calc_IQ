@@ -218,19 +218,20 @@ td:last-child { text-align: right; font-weight: 700; color: var(--primary); font
 
 <script>
 let chart;
+const API_BASE = window.location.origin;
 
 // Format numbers as Indian Rupees
 function inr(v) { 
     return "₹" + Math.round(v).toLocaleString("en-IN"); 
 }
 
-// Display name mapping (DISPLAY ONLY)
+// Display name mapping
 const LABEL_MAP = {
     grocery_and_essentials: "Grocery & Essentials",
     education: "Education",
     healthcare: "Healthcare",
-    transport: "Travel & Transport",   // renamed
-    travel: "Emergency Fund",          // renamed
+    transport: "Travel & Transport",
+    travel: "Emergency Fund",
     savings: "Savings",
     entertainment: "Entertainment"
 };
@@ -247,60 +248,50 @@ function updateChart(needs, wants, savings) {
             datasets: [{
                 data: [needs, wants, savings],
                 backgroundColor: ["#700457", "#9d2b82", "#e2e8f0"],
-                borderWidth: 0,
-                hoverOffset: 10
+                borderWidth: 0
             }]
         },
-        options: { 
-            cutout: "75%", 
-            plugins: { 
-                legend: { 
-                    position: "bottom",
-                    labels: { 
-                        usePointStyle: true, 
-                        padding: 20, 
-                        font: { weight: '600' } 
-                    } 
-                } 
-            } 
+        options: {
+            cutout: "75%",
+            plugins: {
+                legend: { position: "bottom" }
+            }
         }
     });
 }
 
 async function generate() {
-    // Gather input
+    console.log("Generate button clicked");
+
     const payload = {
-        income: parseFloat(document.getElementById('income').value),
-        rent: parseFloat(document.getElementById('rent').value),
-        cost_index: parseFloat(document.getElementById('cost_index').value),
-        family_members: parseInt(document.getElementById('family_members').value)
+        income: Number(document.getElementById('income').value),
+        rent: Number(document.getElementById('rent').value),
+        cost_index: Number(document.getElementById('cost_index').value),
+        family_members: Number(document.getElementById('family_members').value)
     };
 
     try {
-        const res = await fetch("/predict", {
+        const res = await fetch(`${API_BASE}/predict`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
         let d;
-
-        // Parse JSON once, safely
         try {
             d = await res.json();
         } catch (err) {
-            console.error("Server did not return JSON", err);
+            console.error("Non-JSON response", err);
             alert("Server error. Please try again.");
             return;
         }
 
         if (!res.ok) {
-            console.error("API error response:", d);
+            console.error("API error:", d);
             alert("Invalid input or server error.");
             return;
         }
 
-        // Calculate grouped totals
         const needsVal =
             payload.rent +
             (d.grocery_and_essentials || 0) +
@@ -314,12 +305,10 @@ async function generate() {
 
         const savingsVal = d.savings || 0;
 
-        // Update summary cards
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
         document.getElementById('savings').textContent = inr(savingsVal);
 
-        // Populate table with renamed labels
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
@@ -331,13 +320,12 @@ async function generate() {
             `;
         });
 
-        // Show result + chart
         document.getElementById("result").classList.remove("hidden");
         updateChart(needsVal, wantsVal, savingsVal);
 
     } catch (e) {
-        console.error("Connection error:", e);
-        alert("Server communication failed. Please check your internet.");
+        console.error("Fetch failed:", e);
+        alert("Server communication failed.");
     }
 }
 </script>
