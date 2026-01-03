@@ -217,69 +217,93 @@ td:last-child { text-align: right; font-weight: 700; color: var(--primary); font
 </div>
 
 <script>
-// JS Logic remains the same as your functional original, just added minor polish to table labels
 let chart;
-function inr(v) { return "₹" + Math.round(v).toLocaleString("en-IN"); }
+
+// Helper to format currency in Indian Rupees
+function inr(v) { 
+    return "₹" + Math.round(v).toLocaleString("en-IN"); 
+}
+
+// Separate function for chart logic to keep generate() clean
+function updateChart(needs, wants, savings) {
+    const ctx = document.getElementById('chart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: ["Needs", "Wants", "Savings"],
+            datasets: [{
+                data: [needs, wants, savings],
+                backgroundColor: ["#700457", "#9d2b82", "#e2e8f0"],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: { 
+            cutout: "75%", 
+            plugins: { 
+                legend: { 
+                    position: "bottom", 
+                    labels: { usePointStyle: true, padding: 20, font: { weight: '600' } } 
+                } 
+            } 
+        }
+    });
+}
 
 async function generate() {
+    // 1. Gather payload with correct data types for FastAPI
     const payload = {
-        income: +document.getElementById('income').value,
-        rent: +document.getElementById('rent').value,
-        cost_index: +document.getElementById('cost_index').value,
-        family_members: +document.getElementById('family_members').value
+        income: parseFloat(document.getElementById('income').value),
+        rent: parseFloat(document.getElementById('rent').value),
+        cost_index: parseFloat(document.getElementById('cost_index').value),
+        family_members: parseInt(document.getElementById('family_members').value)
     };
 
     try {
+        // 2. Execute the prediction request
         const res = await fetch("/predict", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
+
+        // 3. Handle validation errors (e.g. Family > 10)
+        if (!res.ok) {
+            const err = await res.json();
+            console.error("Server Error:", err);
+            alert("Prediction Error: Please check your inputs. Ensure City Index is 0.7-1.6 and Family is 1-10.");
+            return;
+        }
+
         const d = await res.json();
         
-        const transportVal = d.transport || 0;
-        const travelVal = d.travel || 0;
-        d.emergency_fund = transportVal;
-        d['travel_and_transport'] = travelVal + transportVal;
+        // 4. Transform data for UI display logic
+        // Note: d contains: grocery_and_essentials, education, healthcare, transport, travel, savings, entertainment
+        const needsVal = payload.rent + d.grocery_and_essentials + d.education + d.healthcare;
+        const wantsVal = d.transport + d.travel + d.entertainment;
+        const savingsVal = d.savings;
 
-        delete d.transport;
-        delete d.travel;
-
-        const needsVal = payload.rent + (d.grocery_and_essentials || 0) + (d.education || 0) + (d.healthcare || 0) + (d.emergency_fund || 0);
-        const wantsVal = (d.travel_and_transport || 0) + (d.entertainment || 0);
-
+        // 5. Update UI components
         document.getElementById('needs').textContent = inr(needsVal);
         document.getElementById('wants').textContent = inr(wantsVal);
-        document.getElementById('savings').textContent = inr(d.savings || 0);
+        document.getElementById('savings').textContent = inr(savingsVal);
 
+        // 6. Populate breakdown table
         const table = document.getElementById('table');
         table.innerHTML = "";
         Object.entries(d).forEach(([k, v]) => {
             table.innerHTML += `<tr><td>${k.replace(/_/g, " ")}</td><td>${inr(v)}</td></tr>`;
         });
 
-        const ctx = document.getElementById('chart').getContext('2d');
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                labels: ["Needs", "Wants", "Savings"],
-                datasets: [{
-                    data: [needsVal, wantsVal, d.savings || 0],
-                    backgroundColor: ["#700457", "#9d2b82", "#e2e8f0"],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: { 
-                cutout: "75%", 
-                plugins: { 
-                    legend: { position: "bottom", labels: { usePointStyle: true, padding: 20, font: { weight: '600' } } } 
-                } 
-            }
-        });
+        // 7. Update visualization and reveal results
+        updateChart(needsVal, wantsVal, savingsVal);
         document.getElementById("result").classList.remove("hidden");
-    } catch (e) { console.error(e); }
+
+    } catch (e) { 
+        console.error("Network or Script Error:", e);
+        alert("Could not connect to the AI service. Please check your internet connection.");
+    }
 }
 </script>
 </body>
