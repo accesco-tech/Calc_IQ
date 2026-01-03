@@ -39,7 +39,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# ✅ REQUIRED FOR BROWSER FETCH (CRITICAL FIX)
+# REQUIRED FOR BROWSER FETCH + RENDER
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -73,7 +73,9 @@ class BudgetOutput(BaseModel):
 # -------------------------------------------------
 # 5. ROUTES
 # -------------------------------------------------
-@app.get("/", response_class=HTMLResponse)
+
+# ✅ FIX: Allow HEAD for Render health check
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
@@ -107,4 +109,3 @@ def predict_budget(data: BudgetInput):
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
