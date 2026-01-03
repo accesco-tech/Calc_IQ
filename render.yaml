@@ -3,6 +3,6 @@ services:
     name: calc-iq-keras-api
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt && pip install scikit-learn gunicorn uvicorn
-    # THIS LINE IS THE FIX:
+    buildCommand: pip install -r requirements.txt
+    # The fix is adding: --worker-class uvicorn.workers.UvicornWorker
     startCommand: gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
