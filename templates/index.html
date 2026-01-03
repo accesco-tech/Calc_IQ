@@ -255,56 +255,93 @@
   </div>
 </main>
 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-let chart;
+let chart = null;
+
+function inr(v){
+  return "₹" + Math.round(v).toLocaleString("en-IN");
+}
 
 function generate(){
-  const income = +document.getElementById("income").value;
+  const income = Number(document.getElementById("income").value);
+  const rent = Number(document.getElementById("rent").value);
+  const costIndex = Number(document.getElementById("cost").value || 1);
+  const family = Number(document.getElementById("family").value || 1);
 
-  const needs = Math.round(income * 0.56);
-  const wants = Math.round(income * 0.28);
-  const savings = income - needs - wants;
+  if (!income || income <= 0) {
+    alert("Please enter a valid income");
+    return;
+  }
 
-  document.getElementById("needs").innerText = "₹" + needs.toLocaleString();
-  document.getElementById("wants").innerText = "₹" + wants.toLocaleString();
-  document.getElementById("savings").innerText = "₹" + savings.toLocaleString();
+  /* ===== MAIN BUDGET ===== */
+  let needs = income * 0.56;
+  let wants = income * 0.28;
+  let savings = income * 0.16;
 
-  const breakdown = `
-    <div class="row"><span>Grocery & Essentials</span><b>₹8,487</b></div>
-    <div class="row"><span>Education</span><b>₹1,495</b></div>
-    <div class="row"><span>Healthcare</span><b>₹2,961</b></div>
-    <div class="row"><span>Travel & Transport</span><b>₹3,656</b></div>
-    <div class="row"><span>Emergency Fund</span><b>₹6,470</b></div>
-    <div class="row"><span>Savings</span><b>₹9,079</b></div>
-    <div class="row"><span>Entertainment</span><b>₹4,118</b></div>
+  needs += rent * 0.2;
+  needs *= costIndex;
+  needs *= (1 + (family - 1) * 0.1);
+
+  const total = needs + wants + savings;
+  const scale = income / total;
+
+  needs *= scale;
+  wants *= scale;
+  savings *= scale;
+
+  /* ===== CATEGORY SPLITS ===== */
+  const grocery = needs * 0.40;
+  const healthcare = needs * 0.20;
+  const transport = needs * 0.25;
+  const education = needs * 0.15;
+
+  const entertainment = wants;
+  const emergencyFund = savings * 0.70;
+  const pureSavings = savings * 0.30;
+
+  /* ===== UPDATE SUMMARY ===== */
+  document.getElementById("needs").innerText = inr(needs);
+  document.getElementById("wants").innerText = inr(wants);
+  document.getElementById("savings").innerText = inr(savings);
+
+  /* ===== UPDATE BREAKDOWN LIST ===== */
+  const breakdown = document.getElementById("breakdown");
+  breakdown.innerHTML = `
+    <div class="row"><span>Grocery & Essentials</span><b>${inr(grocery)}</b></div>
+    <div class="row"><span>Education</span><b>${inr(education)}</b></div>
+    <div class="row"><span>Healthcare</span><b>${inr(healthcare)}</b></div>
+    <div class="row"><span>Travel & Transport</span><b>${inr(transport)}</b></div>
+    <div class="row"><span>Emergency Fund</span><b>${inr(emergencyFund)}</b></div>
+    <div class="row"><span>Entertainment</span><b>${inr(entertainment)}</b></div>
+    <div class="row"><span>Savings</span><b>${inr(pureSavings)}</b></div>
   `;
-  document.getElementById("breakdown").innerHTML = breakdown;
 
-  const ctx = document.getElementById("chart");
+  /* ===== CHART ===== */
+  const ctx = document.getElementById("chart").getContext("2d");
+  if (chart) chart.destroy();
 
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx,{
-    type:"doughnut",
-    data:{
-      labels:["Needs","Wants","Savings"],
-      datasets:[{
-        data:[needs,wants,savings],
-        backgroundColor:["#700457","#9d2b82","#e5e7eb"],
-        borderWidth:0
+  chart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Needs", "Wants", "Savings"],
+      datasets: [{
+        data: [needs, wants, savings],
+        backgroundColor: ["#700457", "#9d2b82", "#e5e7eb"],
+        borderWidth: 0
       }]
     },
-    options:{
-      responsive:false,          // 🔒 FIX
-      maintainAspectRatio:false, // 🔒 FIX
-      cutout:"72%",
-      plugins:{legend:{display:false}}
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      cutout: "72%",
+      plugins: { legend: { display: false } }
     }
   });
 }
-
-generate();
 </script>
+
 
 </body>
 </html>
