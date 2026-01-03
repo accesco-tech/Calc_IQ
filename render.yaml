@@ -3,10 +3,10 @@ services:
     name: calc-iq-keras-api
     runtime: python
     plan: free
-    # Added 'pip install gunicorn' directly to ensure it is available
-    buildCommand: pip install -r requirements.txt && pip install gunicorn
-    # Points directly to the gunicorn executable in the python environment
-    startCommand: python -m gunicorn main:app
+    # Added uvicorn to ensure FastAPI can run
+    buildCommand: pip install -r requirements.txt && pip install gunicorn joblib uvicorn
+    # Added the --worker-class to handle FastAPI's async nature
+    startCommand: python -m gunicorn app:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
