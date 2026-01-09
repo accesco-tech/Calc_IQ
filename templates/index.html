@@ -4,229 +4,220 @@
   <meta charset="UTF-8" />
   <title>Monthly Budget AI | Accesco</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
-    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
-
-    body{
-      margin:0;
-      background:linear-gradient(135deg,#faf7fb,#f5f3f7);
-      color:#1f2937;
+    :root {
+      --primary: #700457;
+      --primary-light: #9d2b82;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
     }
 
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:24px 48px;
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, #fdf2f8, #f1f5f9);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding-bottom: 40px;
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 5%;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .brand img{
-      width:44px;
-      height:44px;
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img { width: 40px; height: 40px; border-radius: 8px; }
+    .brand h1 { margin: 0; font-size: 20px; color: var(--primary); letter-spacing: -0.5px; }
+    .brand p { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+    .region { text-align: right; font-size: 12px; color: var(--text-muted); }
+    .region b { color: var(--primary); display: block; }
+
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
     }
 
-    .brand h1{
-      margin:0;
-      font-size:22px;
-      color:#700457;
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 30px;
     }
 
-    .brand p{
-      margin:0;
-      font-size:13px;
-      color:#6b7280;
+    .card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.8);
     }
 
-    .region{
-      text-align:right;
-      font-size:13px;
-      color:#6b7280;
+    .step {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      color: var(--primary);
+      background: #fdf2f8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 15px;
     }
 
-    .region b{
-      color:#700457;
-      font-weight:600;
+    h2 { margin: 0 0 24px; font-size: 24px; font-weight: 700; }
+
+    .input-group { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      font-size: 15px;
+      transition: all 0.2s;
+      background: #fcfcfd;
+    }
+    input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(112, 4, 87, 0.1); }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      margin-top: 10px;
+    }
+    button:hover { background: #5a0346; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    /* Analysis Styles */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 30px;
     }
 
-    main{
-      padding:40px 48px;
+    .pill {
+      background: #f8fafc;
+      padding: 15px 10px;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid #f1f5f9;
+    }
+    .pill span { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+    .pill b { font-size: 16px; color: var(--primary); }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
     }
 
-    .layout{
-      display:grid;
-      grid-template-columns:360px 1fr;
-      gap:40px;
-      align-items:start;
+    .chart-container {
+      position: relative;
+      width: 220px;
+      margin: 0 auto;
     }
 
-    .card{
-      background:#fff;
-      border-radius:18px;
-      padding:28px;
-      box-shadow:0 18px 40px rgba(0,0,0,.08);
+    .details { background: #fff; border-radius: 16px; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row span { color: var(--text-muted); }
+    .row b { color: var(--text-main); font-weight: 600; }
+
+    /* Responsive adjustments */
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      header { padding: 15px 20px; }
+      main { margin: 20px auto; }
     }
 
-    .step{
-      display:inline-block;
-      font-size:12px;
-      font-weight:600;
-      color:#700457;
-      background:#f7eef4;
-      padding:6px 14px;
-      border-radius:999px;
-      margin-bottom:10px;
+    @media (min-width: 600px) {
+      .analysis-grid { grid-template-columns: 220px 1fr; }
     }
 
-    h2{
-      margin:6px 0 20px;
-      font-size:22px;
-    }
-
-    label{
-      display:block;
-      font-size:14px;
-      font-weight:600;
-      margin:14px 0 6px;
-    }
-
-    input{
-      width:100%;
-      padding:12px 14px;
-      border-radius:10px;
-      border:1px solid #e5e7eb;
-      font-size:15px;
-      outline:none;
-    }
-
-    button{
-      margin-top:22px;
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      border:none;
-      background:#700457;
-      color:#fff;
-      font-size:16px;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    /* RIGHT SIDE */
-    .summary{
-      display:flex;
-      gap:18px;
-      margin-bottom:24px;
-    }
-
-    .pill{
-      flex:1;
-      background:#faf5f8;
-      border-radius:14px;
-      padding:16px;
-      text-align:center;
-    }
-
-    .pill span{
-      display:block;
-      font-size:12px;
-      color:#6b7280;
-      margin-bottom:6px;
-      font-weight:600;
-    }
-
-    .pill b{
-      font-size:20px;
-      color:#700457;
-    }
-
-    .analysis-grid{
-      display:grid;
-      grid-template-columns:260px 1fr;
-      gap:36px;
-      align-items:center;
-    }
-
-    /* 🔒 FIXED CHART SIZE */
-    .chart-wrap{
-      width:260px;
-      height:260px;
-      margin:auto;
-    }
-
-    .details{
-      font-size:14px;
-    }
-
-    .row{
-      display:flex;
-      justify-content:space-between;
-      padding:10px 0;
-      border-bottom:1px solid #f1f1f1;
-    }
-
-    .row:last-child{border-bottom:none}
-
-    .row b{
-      color:#700457;
-      font-weight:600;
+    @media (max-width: 480px) {
+      .summary { grid-template-columns: 1fr; }
+      .pill { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; }
+      .pill span { margin-bottom: 0; }
     }
   </style>
 </head>
-
 <body>
 
 <header>
   <div class="brand">
-    <img src="/static/accesco_original.png" alt="Accesco AI">
+    <img src="/static/accesco_original.png" alt="Logo">
     <div>
       <h1>Accesco AI</h1>
-      <p>Smart Financial Planning</p>
+      <p>Financial Intelligence</p>
     </div>
   </div>
-
   <div class="region">
-    <b>INDIA</b><br>
-    Version 2.0
+    <b>INDIA</b>
+    <span>v2.0 Stable</span>
   </div>
 </header>
 
 <main>
   <div class="layout">
-
-    <!-- LEFT -->
     <div class="card">
-      <span class="step">STEP 1: INPUT</span>
+      <span class="step">Config</span>
       <h2>Enter Details</h2>
+      
+      <div class="input-group">
+        <label>Monthly Income (INR)</label>
+        <input type="number" id="income" value="50000">
+      </div>
 
-      <label>Monthly Income</label>
-      <input id="income" value="50000">
+      <div class="input-group">
+        <label>Rent / Monthly EMI</label>
+        <input type="number" id="rent" value="15000">
+      </div>
 
-      <label>Rent / EMI</label>
-      <input id="rent" value="15000">
+      <div class="input-group">
+        <label>City Cost Index (1.0 = Avg)</label>
+        <input type="number" step="0.1" id="cost" value="1.0">
+      </div>
 
-      <label>City Cost Index (1.0 = Avg)</label>
-      <input id="cost" value="1.0">
+      <div class="input-group">
+        <label>Family Members</label>
+        <input type="number" id="family" value="1">
+      </div>
 
-      <label>Family Members</label>
-      <input id="family" value="1">
-
-      <button onclick="generate()">Generate Prediction</button>
+      <button onclick="generate()">Generate Analysis</button>
     </div>
 
-    <!-- RIGHT -->
     <div class="card">
-      <span class="step">STEP 2: ANALYSIS</span>
-      <h2>Your AI Budget</h2>
+      <span class="step">Results</span>
+      <h2>Budget Breakdown</h2>
 
       <div class="summary">
         <div class="pill">
@@ -244,38 +235,36 @@
       </div>
 
       <div class="analysis-grid">
-        <div class="chart-wrap">
+        <div class="chart-container">
           <canvas id="chart"></canvas>
         </div>
-
-        <div class="details" id="breakdown"></div>
+        <div class="details" id="breakdown">
+          <p style="color:var(--text-muted); text-align:center; margin-top:40px;">Enter income and click generate to see details.</p>
+        </div>
       </div>
     </div>
-
   </div>
 </main>
 
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let chart = null;
 
-function inr(v){
+function inr(v) {
   return "₹" + Math.round(v).toLocaleString("en-IN");
 }
 
-function generate(){
+function generate() {
   const income = Number(document.getElementById("income").value);
   const rent = Number(document.getElementById("rent").value);
   const costIndex = Number(document.getElementById("cost").value || 1);
   const family = Number(document.getElementById("family").value || 1);
 
   if (!income || income <= 0) {
-    alert("Please enter a valid income");
+    alert("Please enter a valid income amount");
     return;
   }
 
-  /* ===== MAIN BUDGET ===== */
+  // Logic calculation
   let needs = income * 0.56;
   let wants = income * 0.28;
   let savings = income * 0.16;
@@ -291,34 +280,29 @@ function generate(){
   wants *= scale;
   savings *= scale;
 
-  /* ===== CATEGORY SPLITS ===== */
   const grocery = needs * 0.40;
   const healthcare = needs * 0.20;
   const transport = needs * 0.25;
   const education = needs * 0.15;
-
   const entertainment = wants;
   const emergencyFund = savings * 0.70;
   const pureSavings = savings * 0.30;
 
-  /* ===== UPDATE SUMMARY ===== */
   document.getElementById("needs").innerText = inr(needs);
   document.getElementById("wants").innerText = inr(wants);
   document.getElementById("savings").innerText = inr(savings);
 
-  /* ===== UPDATE BREAKDOWN LIST ===== */
   const breakdown = document.getElementById("breakdown");
   breakdown.innerHTML = `
-    <div class="row"><span>Grocery & Essentials</span><b>${inr(grocery)}</b></div>
-    <div class="row"><span>Education</span><b>${inr(education)}</b></div>
+    <div class="row"><span>Groceries & Food</span><b>${inr(grocery)}</b></div>
     <div class="row"><span>Healthcare</span><b>${inr(healthcare)}</b></div>
-    <div class="row"><span>Travel & Transport</span><b>${inr(transport)}</b></div>
+    <div class="row"><span>Transport</span><b>${inr(transport)}</b></div>
+    <div class="row"><span>Education</span><b>${inr(education)}</b></div>
+    <div class="row"><span>Leisure/Wants</span><b>${inr(entertainment)}</b></div>
     <div class="row"><span>Emergency Fund</span><b>${inr(emergencyFund)}</b></div>
-    <div class="row"><span>Entertainment</span><b>${inr(entertainment)}</b></div>
-    <div class="row"><span>Savings</span><b>${inr(pureSavings)}</b></div>
+    <div class="row"><span>Investments</span><b>${inr(pureSavings)}</b></div>
   `;
 
-  /* ===== CHART ===== */
   const ctx = document.getElementById("chart").getContext("2d");
   if (chart) chart.destroy();
 
@@ -328,20 +312,23 @@ function generate(){
       labels: ["Needs", "Wants", "Savings"],
       datasets: [{
         data: [needs, wants, savings],
-        backgroundColor: ["#700457", "#9d2b82", "#e5e7eb"],
+        backgroundColor: ["#700457", "#c241a3", "#e2e8f0"],
+        hoverOffset: 4,
         borderWidth: 0
       }]
     },
     options: {
-      responsive: false,
-      maintainAspectRatio: false,
-      cutout: "72%",
-      plugins: { legend: { display: false } }
+      cutout: "80%",
+      plugins: {
+        legend: { display: false }
+      }
     }
   });
 }
-</script>
 
+// Initial Run
+window.onload = generate;
+</script>
 
 </body>
 </html>
